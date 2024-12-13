@@ -1,41 +1,33 @@
-pragma solidity ^0.8.19;
-pragma abicoder v2;
+pragma solidity ^0.8.28;
 
+import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {Token} from "./Token.sol";
 
-contract Staking {
+contract Staking is Ownable {
     
     // instance du contrat ERC20
-    Token private immutable token;
+    Token token;
 
     // Variables
-    uint8 private immutable times;
-    uint8 private immutable rateReward;
-    address private immutable owner;
-    bool private paused;
+    uint256 duration;
+    uint8 rateReward;
+    uint8 fees;
+    uint256 max_fees;
+    bool paused;
+    address owner;
 
     // Structure for balance's staker
     struct stakData{
         uint256 reward;
-        uint64 totalStaking;
-        uint duration;
-        bool accountStak;
+        uint256 amountStaking;
+        uint256 time;
     }
 
     //Balance for staker
-    mapping (address => stakData) private balance;
+    mapping (address => stakData) balance;
 
-    constructor(Token _token, uint8 _times, uint8 _rateReward){
-        token = _token;
-        owner = msg.sender;
-        times = _times;
-        rateReward = _rateReward;
-    }
-
-    // group features for staking
-    //get times for staking 
-    function getTimes() external view returns(uint8){
-        return times;
+    constructor(address _owner) Ownable(_owner){
+        owner =  _owner;
     }
 
     // get rate reward for staking

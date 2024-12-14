@@ -1,107 +1,66 @@
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.20;
 
 import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
-import {Token} from "./Token.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {Matec} from "./Matec.sol";
 
 contract Staking is Ownable {
-    
-    // instance du contrat ERC20
-    Token token;
-
     // Variables
     uint256 duration;
-    uint8 rateReward;
-    uint8 fees;
     uint256 max_fees;
     bool paused;
-    address owner;
+
+    uint256 amountTotalStacked;
 
     // Structure for balance's staker
-    struct stakData{
-        uint256 reward;
-        uint256 amountStaking;
+    struct stakeData{
+        uint256 amountBlocked;
         uint256 time;
     }
 
     //Balance for staker
-    mapping (address => stakData) balance;
+    mapping (address => stakeData) balance;
 
     constructor(address _owner) Ownable(_owner){
-        owner =  _owner;
     }
 
     // get rate reward for staking
-    function getRateReward() external view returns(uint8){
-        return rateReward;
+    function getRateReward() public view returns(uint256 rateReward){
+        uint8 rateReward = IERC20(address(Token)).totalSupply() - amountTotalStacked * (10**18) / 10000;
+
     }
 
-    function getTotalStaking() external view returns(uint64) {
-        address sender = msg.sender;
-        require(sender != owner);
-        require(balance[sender].accountStak, "Account do not exist");
-        return balance[sender].totalStaking;
+    function amountStaked(address staker) public view returns(uint256) {
+        balance[staker].accountStaked;
     }
 
     // go staking a amount 
-    function goStaking(uint64 _amount) external{
-        address sender = msg.sender;
-        require(sender != owner);
-        require(_amount > 0, "problem in value");
-        require(_amount < 1000000, "problem in value");
-        require(token.balanceOf(sender) >= _amount);
-        stakData storage staker = balance[sender];
-        staker.totalStaking = _amount;
-        staker.reward += _stak(staker);
-        staker.accountStak = true;
+    function goStake(address staker, uint64 _amount) public{
+        require(token.balanceOf(staker) >= _amount);
+        balance[staker].amountBlocked += _amount;
+        balance[staker].time = block.timestamp;
+        IERC20(address(Token)).transfer(address(this), _amount);
     }
     
     // stop staking
-    function unStaking() external {
-        address sender = msg.sender;
-        _checkTime(sender);
-        require(sender != owner, "Is owner");
-        require(balance[sender].accountStak, "Account do not exist");
-        require(paused, "Time is Over");
-        stakData storage staker = balance[sender];
-        uint256 reward = staker.reward;
-        bool accountStak = staker.accountStak;
-        delete balance[sender];
-        token.transferStaking(sender, accountStak, reward);
+    function rewardStatus(address staker) public pure returns(uint256 reward) {
+        
+        uint256 reward = _calculReward(staker);
     }
 
-    //check the state of staking
-    function checkStaking() external view returns(uint256){
-        address sender = msg.sender;
-        require(sender != owner);
-        require(balance[sender].accountStak, "Account do not exist");
-        return balance[sender].reward;
+    function unStake(address staker) public {
+        uint256 reward = _calculReward(staker);
+        uint256 amount = stakeData[staker].amountBlocked + reward;
+        stakeData[staker].times = 0;
+        stakeData[staker].amountBlocked = 0;
+        IERC20(address(Token)).transferFrom(address(this), staker, amount);
     }
-
-    //Ending stak
-    function endingStak() external {
-        address sender = msg.sender;
-        _checkTime(sender);
-        require(sender != owner);
-        require(balance[sender].accountStak, "Account do not exist");
-        require(!paused, "Time is not Over");
-        stakData storage staker = balance[sender];
-        uint256 reward = balance[sender].reward;
-        bool accountStak = staker.accountStak;
-        delete balance[sender];
-        token.transferStaking(sender, accountStak, reward);
-        }
-
 
     // function for compute stak
-    function _stak(stakData storage _staker) internal returns(uint256){
-        _staker.duration = times-block.timestamp;
-        return (_staker.totalStaking*rateReward*_staker.duration)/100;
-    }
-
-    // Function to check time 
-    function _checkTime(address _account)  internal {
-        if (balance[_account].duration > 0){
-            paused = true;
-        }
+    function _calculReward(address staker) internal pure returns(uint256 reward){
+        uint256 amount = stakeData[staker].amountBlocked;
+        uint256 times = stakeData[staker].times;
+        uint256 rate = getRateReward();
+        uint256 reward = (amount * times * rate) / 10000;
     }
 }

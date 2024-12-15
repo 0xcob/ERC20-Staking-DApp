@@ -1,21 +1,25 @@
-/*pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 import "forge-std/Test.sol";
-import {Token} from "../src/Token.sol";
+import {Matec} from "../src/Matec.sol";
 import {Staking} from "../src/Staking.sol";
-import {Accounts} from "../src/Accounts.sol";
 
-contract StakingTest is Test, Accounts{
-    Staking stak;
-    Token token;
-    event Transfer(address indexed _from, address indexed _to, uint256 _amount);
+contract StakingTest is Test{
+    Staking stake;
+    Matec token;
+    address owner = 0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496;
+    address user2 = 0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5;
 
     function setUp() external {
-        token = new Token();
-        token.transfer(account2, 2000);
-        stak = new Staking(token, 10, 3);
+        vm.startPrank(owner);
+        token = new Matec();
+        token.transfer(owner, 500_000);
+        token.transfer(user2, 500_000);
+        stake = new Staking();
+        vm.stopPrank();
     }
 
+    /*
     //test sur le bon fonctionnement des features 
     //test sur la fonction de staking
     function test_onStaking() external{
@@ -123,5 +127,5 @@ contract StakingTest is Test, Accounts{
         stak.goStaking(_amount);
         vm.prank(account2);
         assertEq(stak.getTotalStaking(), _amount);
-    }
-}*/
+    } */
+}

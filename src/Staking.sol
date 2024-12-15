@@ -29,12 +29,12 @@ contract Staking is Ownable {
 
     // get rate reward for staking
     function getRateReward() public view returns(uint256 rateReward){
-        uint256 rateReward = IERC20(address(matec)).totalSupply() - amountTotalStacked * (10**18) / 10000;
+        rateReward = IERC20(address(matec)).totalSupply() - amountTotalStacked * (10**18) / 10000;
 
     }
 
     function amountStaked(address staker) public view returns(uint256) {
-        balance[staker].amountBlocked;
+        return balance[staker].amountBlocked;
     }
 
     // go staking a amount 
@@ -47,7 +47,7 @@ contract Staking is Ownable {
     
     // stop staking
     function rewardStatus(address staker) public view returns(uint256 reward) {
-        uint256 reward = _calculReward(staker);
+        reward = _calculReward(staker);
     }
 
     function unStake(address staker) public {
@@ -63,6 +63,6 @@ contract Staking is Ownable {
         uint256 amount = balance[staker].amountBlocked;
         uint256 times = balance[staker].time;
         uint256 rate = getRateReward();
-        uint256 reward = (amount * times * rate) / 10000;
+        reward = (amount * times * rate) / 10000;
     }
 }

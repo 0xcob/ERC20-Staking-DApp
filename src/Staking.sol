@@ -46,7 +46,7 @@ contract Staking is Ownable {
     }
     
     // stop staking
-    function rewardStatus(address staker) public pure returns(uint256 reward) {
+    function rewardStatus(address staker) public view returns(uint256 reward) {
         uint256 reward = _calculReward(staker);
     }
 
@@ -59,7 +59,7 @@ contract Staking is Ownable {
     }
 
     // function for compute stak
-    function _calculReward(address staker) internal pure returns(uint256 reward){
+    function _calculReward(address staker) internal view returns(uint256 reward){
         uint256 amount = balance[staker].amountBlocked;
         uint256 times = balance[staker].time;
         uint256 rate = getRateReward();
